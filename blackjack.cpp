@@ -22,6 +22,10 @@ class Card{  // Class for the cards
             return worth == 0;
         }
 
+        std::string name(){
+            return card;
+        }
+
         void printCard(){  // Prints the name and worth of the card, will be replaced by the __str__() equivilant once I learn how it works
             std::cout << card << "; " << worth << '\n';
         }
@@ -60,6 +64,9 @@ class Deck{  // Class for the deck
             shuffleDeck();
         }
 
+
+    public:
+
         void shuffleDeck(){  // Using the Fisher–Yates shuffle Algorithm, O(n^2), shuffles the deck
             for(int i = deckSize - 1; i > 0; i--){  // Goes through every index in the deck
                 int j = rand() % (i + 1);  // Gets a random value between 0 and the current i
@@ -70,7 +77,9 @@ class Deck{  // Class for the deck
             }
         }
 
-    public:
+        Card cardAt(int i){
+            return deck[i];
+        }
 
         void printDeck(){  // Prints every card in the deck. Will be replaced with __str__ eqiv. once i learn how thats done
             for(int i = 0; i < deckSize; i++){
@@ -92,6 +101,33 @@ class Human{  // Not yet implemented. Will store everything important to both th
         int maximumPoints;  // Will store the maximum amount of points held
     
     public:
+
+        std::string cardsList(){
+            calculatePoints();
+            std::string cards = held[0].name();
+            int i = 1;
+            while(!held[i].isEmpty()){
+                cards += ", " + held[i].name();
+                i++;
+            }
+            std::string extra = "";
+            if (minimumPoints == maximumPoints){
+                extra = " (" + std::to_string(minimumPoints) + ")";
+            }
+            else{
+                extra = " (" + std::to_string(minimumPoints) + ", " + std::to_string(minimumPoints) + ")";
+            }
+            return cards + extra;
+        }
+
+        void addCard(Card card){
+            int i = 0;
+            while(!held[i].isEmpty()){
+                i++;
+            }
+            held[i] = card;
+        }
+
         bool bust(int points){
             return points > 21;
         }
@@ -104,6 +140,9 @@ class Human{  // Not yet implemented. Will store everything important to both th
             return minimumPoints;
         }
 
+        Card cardAt(int i){
+            return held[i];
+        }
 
         void calculatePoints(){
             int min = 0;
@@ -122,14 +161,13 @@ class Human{  // Not yet implemented. Will store everything important to both th
             this-> maximumPoints = max;
         }
         
-
         Human(){
-
+            
         }
 };
 
 
-class Dealer : private Human{  // Not yet implemented. Will store everything important to the dealer
+class Dealer : public Human{  // Not yet implemented. Will store everything important to the dealer
     private:
 
     public:
@@ -142,7 +180,7 @@ class Dealer : private Human{  // Not yet implemented. Will store everything imp
         }
 };
 
-class Player : private Human{  // Not yet implemented. Will store everything important to the players
+class Player : public Human{  // Not yet implemented. Will store everything important to the players
     private:
         std::string name;
         int money;
@@ -169,6 +207,10 @@ class Player : private Human{  // Not yet implemented. Will store everything imp
         void printPlayer(){
             std::cout << "Name: " << name << "\n" << "Money: €" << money << "\n";
         }
+
+        int bet(){
+            return currentBet;
+        }
 };
 
 class BlackJack{
@@ -176,7 +218,7 @@ class BlackJack{
         Dealer dealer;
         Deck deck;
         Player player;
-        int turn = 0;
+        int cardPos = 0;
     public:
 
     BlackJack(){
@@ -189,8 +231,9 @@ class BlackJack{
 
     void playRound(){
         player.setBet(bet());
-        /*
+        
         draw();
+        /*
         if (dealer.isNatural()){
             insurance();
         }
@@ -202,6 +245,19 @@ class BlackJack{
         */
     }
 
+    void draw(){
+        while(dealer.cardAt(1).isEmpty()){
+            player.addCard(deck.cardAt(cardPos));
+            cardPos++;
+            dealer.addCard(deck.cardAt(cardPos));
+            cardPos++;
+        }
+        std::cout << repeat("*", 15) << "\n";
+        std::cout << "Dealer: " << dealer.cardsList() << "\n";
+        std::cout << "You: " << player.cardsList() << "\n";
+        std::cout << "Your bet: €" << player.bet() << "\n";
+    }
+
     int bet(){
         std::string betToMake;
         int iBet;
@@ -210,7 +266,7 @@ class BlackJack{
         {
             do
             {
-                std::cout << "Current Wallet: €" << player.moneyCount() << "\n";
+                std::cout << "Current Balance: €" << player.moneyCount() << "\n";
                 std::cout << "How much do you wish to bet? (Must be a Natural Number): ";
                 std::getline(std::cin, betToMake);
             } while (!isDigit(betToMake));
